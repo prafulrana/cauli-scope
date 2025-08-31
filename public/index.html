@@ -7,7 +7,10 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Cauliflower Debug Viewer</h1>
+    <div class="header">
+        <h1 class="pixelated-title">🥦 CauliScope</h1>
+        <p class="subtitle">The Cauliflower Debugger</p>
+    </div>
     
     <!-- Tab navigation -->
     <div class="tabs">
@@ -17,6 +20,11 @@
     
     <!-- Images tab content -->
     <div id="images" class="tab-content active">
+        <div class="controls-bar">
+            <button id="clear-dir-btn" onclick="clearDirectory()" class="danger-btn">Clear All Images</button>
+            <button id="refresh-btn" onclick="loadImages(1)" class="primary-btn">Refresh</button>
+            <span id="image-count" class="info-text"></span>
+        </div>
         <div id="image-grid" class="grid-container"></div>
         <div id="loader" class="loader" style="display: none;">Loading...</div>
     </div>

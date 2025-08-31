@@ -100,6 +100,38 @@ app.get('/api/test/videos', (req, res) => {
     });
 });
 
+// API endpoint to clear test directory
+app.delete('/api/images/clear', (req, res) => {
+    fs.readdir(imagesDir, (err, files) => {
+        if (err) {
+            return res.status(500).json({ error: 'Could not read images directory' });
+        }
+        
+        let deletedCount = 0;
+        let errors = [];
+        
+        files.forEach(file => {
+            // Only delete image and json files, not directories
+            if (file.endsWith('.jpg') || file.endsWith('.jpeg') || file.endsWith('.png') || 
+                file.endsWith('.gif') || file.endsWith('.json')) {
+                try {
+                    fs.unlinkSync(path.join(imagesDir, file));
+                    deletedCount++;
+                } catch (e) {
+                    errors.push({ file, error: e.message });
+                }
+            }
+        });
+        
+        broadcast({ type: 'directory_cleared' });
+        res.json({ 
+            success: true, 
+            deletedCount,
+            errors: errors.length > 0 ? errors : undefined 
+        });
+    });
+});
+
 // API endpoint to get test results
 app.get('/api/test/results', (req, res) => {
     fs.readdir(imagesDir, (err, files) => {
@@ -186,6 +218,10 @@ const watcher = chokidar.watch(imagesDir, {
     ignored: /initial\.|\.tmp$/,
     persistent: true,
     ignoreInitial: true, // Don't send notifications for existing files on startup
+    awaitWriteFinish: {
+        stabilityThreshold: 200,  // Wait 200ms for file to be completely written
+        pollInterval: 100
+    }
 });
 
 console.log(`Watching for new images in: ${imagesDir}`);
@@ -193,8 +229,22 @@ console.log(`Watching for new images in: ${imagesDir}`);
 watcher.on('add', filePath => {
     const fileName = path.basename(filePath);
     console.log(`New image detected: ${fileName}`);
-    // Notify clients about the new image
+    // Notify clients about the new image immediately
     broadcast({ type: 'new_image', file: fileName });
+});
+
+watcher.on('change', filePath => {
+    const fileName = path.basename(filePath);
+    console.log(`Image updated: ${fileName}`);
+    // Notify clients about updated image
+    broadcast({ type: 'image_updated', file: fileName });
+});
+
+watcher.on('unlink', filePath => {
+    const fileName = path.basename(filePath);
+    console.log(`Image deleted: ${fileName}`);
+    // Notify clients about deleted image
+    broadcast({ type: 'image_deleted', file: fileName });
 });
 
 server.listen(PORT, () => {
