@@ -36,8 +36,8 @@ app.post('/api/test/run', (req, res) => {
         return res.status(400).json({ error: 'Video and sport are required' });
     }
     
-    const testPath = path.join(__dirname, 'cauliflower-tests', 'video-test-client.js');
-    const videoPath = path.join(__dirname, 'cauliflower-tests', 'test_videos', video);
+    const testPath = path.join(process.env.HOME, 'cauliflower-tests', 'video-test-client.js');
+    const videoPath = path.join(process.env.HOME, 'cauliflower-tests', 'test_videos', video);
     
     // Check if video exists
     if (!fs.existsSync(videoPath)) {
@@ -81,7 +81,7 @@ app.post('/api/test/run', (req, res) => {
 
 // API endpoint to get available test videos
 app.get('/api/test/videos', (req, res) => {
-    const videosDir = path.join(__dirname, 'cauliflower-tests', 'test_videos');
+    const videosDir = path.join(process.env.HOME, 'cauliflower-tests', 'test_videos');
     
     if (!fs.existsSync(videosDir)) {
         return res.json({ videos: [] });
